@@ -1,20 +1,33 @@
 package br.com.concorrencia.tradutor;
 
-import br.com.concorrencia.tradutor.controller.gui.TradutorConcorrencia;
-import javafx.application.Application;
-
-/*
-Paradigmas de Programação 2025.2
-Alunos:
-
-- ALAN DA COSTA PESSOA
-- DANIEL DIONÍSIO DE OLIVEIRA
-- HEITOR LEANDER FEITOSA DA SILVA
-- JOAO LUCAS DE ARAUJO PEREIRA
- */
+import br.com.concorrencia.tradutor.task.EngineConcorrencia;
 
 public class Main {
     public static void main(String[] args) {
-        Application.launch(TradutorConcorrencia.class, args);
+
+        EngineConcorrencia engine = new EngineConcorrencia();
+
+        // inicializa o dicionário carregando os arquivos da pasta "recursos"
+        engine.inicializar(() -> System.out.println("Inicialização concluída! Dicionários carregados."));
+
+        // dá um pequeno delay para garantir leitura dos arquivos (pelo pool)
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // texto de teste
+        String texto = "You can do it if you try";
+
+        System.out.println("\nTexto original:");
+        System.out.println(texto);
+
+        String traducao = engine.traduzirTexto(texto);
+
+        System.out.println("\nTexto traduzido:");
+        System.out.println(traducao);
+
+        engine.encerrar();
     }
 }

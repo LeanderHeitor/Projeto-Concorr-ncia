@@ -15,6 +15,14 @@ public class TradutorTask implements Callable<String> {
 
     @Override
     public String call() {
-        return dicionario.traduzir(palavra);
+        String limpa = palavra.toLowerCase().replaceAll("[^a-zA-Zá-úÁ-Ú0-9]", "");
+        String traducao = dicionario.traduzir(limpa);
+
+        // Se não encontrou, mantém a palavra original
+        if (traducao == null) {
+            return palavra;
+        }
+
+        return traducao;
     }
 }

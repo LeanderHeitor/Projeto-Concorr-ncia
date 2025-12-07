@@ -2,6 +2,9 @@ package br.com.concorrencia.tradutor.task;
 
 import br.com.concorrencia.tradutor.model.Dicionario;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -26,7 +29,7 @@ public class EngineConcorrencia {
 
         poolLeitura.submit(() -> {
             try {
-                simularCargaDeDados();
+                carregarDicionarios();
                 barreiraInicializacao.await();
             } catch (InterruptedException | BrokenBarrierException e) {
                 Thread.currentThread().interrupt();
@@ -35,6 +38,7 @@ public class EngineConcorrencia {
 
         poolAnalise.submit(() -> {
             try {
+                carregarDicionarios();
                 barreiraInicializacao.await();
             } catch (InterruptedException | BrokenBarrierException e) {
                 Thread.currentThread().interrupt();
@@ -42,19 +46,32 @@ public class EngineConcorrencia {
         });
     }
 
-    private void simularCargaDeDados() {
+    /**
+     * Carrega automaticamente todos os arquivos .txt da pasta /dicionarios/
+     */
+    private void carregarDicionarios() {
         try {
-            Thread.sleep(1500);
-            dicionario.adicionar("hello", "olá");
-            dicionario.adicionar("world", "mundo");
-            dicionario.adicionar("concurrency", "concorrência");
-            dicionario.adicionar("thread", "fio de execução");
-            dicionario.adicionar("java", "Java");
-            dicionario.adicionar("performance", "desempenho");
-            dicionario.adicionar("pool", "conjunto");
-            dicionario.adicionar("lock", "trava");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            File pasta = new File("recursos");
+
+            if (pasta.exists() && pasta.isDirectory()) {
+                File[] arquivos = pasta.listFiles((dir, nome) -> nome.endsWith(".txt"));
+
+                if (arquivos != null) {
+                    for (File arq : arquivos) {
+                        try {
+                            dicionario.carregarArquivo(arq.getAbsolutePath());
+                            System.out.println("Carregado: " + arq.getAbsolutePath());
+                        } catch (IOException e) {
+                            System.err.println("Erro ao carregar " + arq.getName() + ": " + e.getMessage());
+                        }
+                    }
+                }
+            } else {
+                System.err.println("Pasta 'recursos' não encontrada. Crie a pasta no diretório raiz do projeto.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao carregar dicionários: " + e.getMessage());
         }
     }
 
@@ -109,5 +126,15 @@ public class EngineConcorrencia {
         poolLeitura.shutdown();
         poolAnalise.shutdown();
         poolTraducao.shutdown();
+    }
+
+    public String traduzirTexto(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return "";
+        }
+
+        String[] palavras = texto.split("\\s+");
+        List<String> lista = List.of(palavras);
+        return traduzirParalelo(lista);
     }
 }
