@@ -1,0 +1,106 @@
+# Gênero e Tipo das Palavras em Português
+# Formato: palavra;gênero;tipo
+# Gênero: m (masculino), f (feminino), n (neutro)
+# Tipo: subst (substantivo), adj (adjetivo), art (artigo), verb (verbo), adv (advérbio), prep (preposição)
+
+# Artigos
+o;m;art
+a;f;art
+os;m;art
+as;f;art
+um;m;art
+uma;f;art
+
+# Substantivos masculinos
+dia;m;subst
+mundo;m;subst
+tempo;m;subst
+homem;m;subst
+carro;m;subst
+país;m;subst
+trabalho;m;subst
+ano;m;subst
+pé;m;subst
+olho;m;subst
+coração;m;subst
+problema;m;subst
+
+# Substantivos femininos
+noite;f;subst
+vida;f;subst
+casa;f;subst
+rua;f;subst
+cidade;f;subst
+mulher;f;subst
+criança;f;subst
+mão;f;subst
+cabeça;f;subst
+pessoa;f;subst
+questão;f;subst
+coisa;f;subst
+escola;f;subst
+
+# Adjetivos (formas masculinas e femininas)
+longo;m;adj
+longa;f;adj
+quieto;m;adj
+quieta;f;adj
+bonito;m;adj
+bonita;f;adj
+bom;m;adj
+boa;f;adj
+ruim;m;adj
+feliz;n;adj
+triste;n;adj
+grande;n;adj
+pequeno;m;adj
+pequena;f;adj
+novo;m;adj
+nova;f;adj
+velho;m;adj
+velha;f;adj
+
+# Verbos
+foi;n;verb
+estava;n;verb
+é;n;verb
+são;n;verb
+eram;n;verb
+ser;n;verb
+estar;n;verb
+ter;n;verb
+fazer;n;verb
+ir;n;verb
+dar;n;verb
+ver;n;verb
+saber;n;verb
+querer;n;verb
+poder;n;verb
+
+# Advérbios
+sempre;n;adv
+nunca;n;adv
+agora;n;adv
+ontem;n;adv
+hoje;n;adv
+amanhã;n;adv
+muito;n;adv
+pouco;n;adv
+
+# Preposições
+de;n;prep
+em;n;prep
+para;n;prep
+com;n;prep
+por;n;prep
+sobre;n;prep
+após;n;prep
+antes;n;prep
+
+# Conjunções
+e;n;conj
+mas;n;conj
+ou;n;conj
+se;n;conj
+porque;n;conj
+quando;n;conj

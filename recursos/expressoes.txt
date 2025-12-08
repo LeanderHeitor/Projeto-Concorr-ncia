@@ -1,0 +1,79 @@
+# Expressões Multi-palavra (Bigramas e Trigramas)
+# Formato: expressão_original;tradução
+# Estas expressões são processadas ANTES da tradução palavra-por-palavra
+
+# Artigo + Substantivo (para resolver concordância de gênero)
+the day;o dia
+the night;a noite
+the world;o mundo
+the life;a vida
+the time;o tempo
+the house;a casa
+the car;o carro
+the street;a rua
+the city;a cidade
+the country;o país
+the man;o homem
+the woman;a mulher
+the child;a criança
+the people;as pessoas
+the work;o trabalho
+the year;o ano
+the hand;a mão
+the eye;o olho
+the head;a cabeça
+the foot;o pé
+the heart;o coração
+
+# Verbo To Be + Adjetivo (para melhorar naturalidade)
+was long;estava longo
+was quiet;estava quieto
+was beautiful;era bonito
+was good;era bom
+was bad;era ruim
+was happy;estava feliz
+was sad;estava triste
+is long;é longo
+is quiet;é quieto
+is beautiful;é bonito
+is good;é bom
+is bad;é ruim
+are good;são bons
+were good;eram bons
+
+# Expressões idiomáticas comuns
+of course;claro
+thank you;obrigado
+you are welcome;de nada
+good morning;bom dia
+good night;boa noite
+good afternoon;boa tarde
+how are you;como vai você
+what is;o que é
+there is;há
+there are;há
+in the;no
+on the;no
+at the;no
+to the;para o
+from the;do
+with the;com o
+
+# Verbos modais + verbo
+can do;pode fazer
+will do;vai fazer
+would like;gostaria
+could be;poderia ser
+should be;deveria ser
+
+# Preposição + artigo + substantivo
+in the world;no mundo
+in the house;na casa
+on the street;na rua
+at the time;na época
+
+# Construções verbais
+do it;faça isso
+give up;desistir
+work hard;trabalhar duro
+never give up;nunca desistir

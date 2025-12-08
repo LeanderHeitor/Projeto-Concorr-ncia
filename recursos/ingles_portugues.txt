@@ -98,3 +98,11 @@ give;dar
 day;dia
 most;a maioria
 us;nós
+was;foi
+long;longo
+night;noite
+quiet;quieto
+were;foram
+am;sou
+is;é
+are;são

@@ -1,6 +1,8 @@
 package br.com.concorrencia.tradutor.task;
 
 import br.com.concorrencia.tradutor.model.Dicionario;
+import br.com.concorrencia.tradutor.util.ProcessadorExpressoes;
+import br.com.concorrencia.tradutor.util.PosProcessador;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,10 +17,14 @@ public class EngineConcorrencia {
     private final ExecutorService poolAnalise;
     private final ExecutorService poolTraducao;
     private final Dicionario dicionario;
+    private final ProcessadorExpressoes processadorExpressoes;
+    private final PosProcessador posProcessador;
     private CyclicBarrier barreiraInicializacao;
 
     public EngineConcorrencia() {
         this.dicionario = new Dicionario();
+        this.processadorExpressoes = new ProcessadorExpressoes();
+        this.posProcessador = new PosProcessador();
         this.poolLeitura = Executors.newFixedThreadPool(2);
         this.poolAnalise = Executors.newFixedThreadPool(2);
         this.poolTraducao = Executors.newCachedThreadPool();
@@ -47,14 +53,35 @@ public class EngineConcorrencia {
     }
 
     /**
-     * Carrega automaticamente todos os arquivos .txt da pasta /dicionarios/
+     * Carrega automaticamente todos os recursos:
+     * - Dicionários (arquivos .txt)
+     * - Expressões multi-palavra
+     * - Informações de gênero
      */
     private void carregarDicionarios() {
         try {
             File pasta = new File("recursos");
 
             if (pasta.exists() && pasta.isDirectory()) {
-                File[] arquivos = pasta.listFiles((dir, nome) -> nome.endsWith(".txt"));
+                // Carrega expressões e gêneros primeiro
+                try {
+                    processadorExpressoes.carregarArquivo("recursos/expressoes.txt");
+                } catch (IOException e) {
+                    System.err.println("Aviso: expressoes.txt não encontrado - tradução sem expressões multi-palavra");
+                }
+
+                try {
+                    posProcessador.carregarArquivo("recursos/generos.txt");
+                } catch (IOException e) {
+                    System.err.println("Aviso: generos.txt não encontrado - tradução sem ajuste de concordância");
+                }
+
+                // Carrega apenas dicionários EN->PT (excluindo PT->EN, expressoes e generos)
+                File[] arquivos = pasta.listFiles((dir, nome) ->
+                    nome.endsWith(".txt") &&
+                    !nome.equals("expressoes.txt") &&
+                    !nome.equals("generos.txt") &&
+                    !nome.equals("portugues_ingles.txt"));
 
                 if (arquivos != null) {
                     for (File arq : arquivos) {
@@ -71,7 +98,7 @@ public class EngineConcorrencia {
             }
 
         } catch (Exception e) {
-            System.err.println("Erro inesperado ao carregar dicionários: " + e.getMessage());
+            System.err.println("Erro inesperado ao carregar recursos: " + e.getMessage());
         }
     }
 
@@ -128,7 +155,54 @@ public class EngineConcorrencia {
         poolTraducao.shutdown();
     }
 
+    /**
+     * Traduz texto usando sistema de 3 camadas para melhor qualidade.
+     *
+     * CAMADA 1: Processamento de expressões multi-palavra
+     * CAMADA 2: Tradução palavra-por-palavra (paralela)
+     * CAMADA 3: Pós-processamento linguístico (concordância)
+     *
+     * @param texto Texto a ser traduzido
+     * @return Texto traduzido com melhor qualidade
+     */
+    public String traduzirTextoMelhorado(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return "";
+        }
+
+        // CAMADA 1: Substituir expressões multi-palavra
+        String textoComExpressoes = processadorExpressoes.processar(texto);
+
+        // CAMADA 2: Traduzir palavras restantes (paralelo)
+        String[] palavras = textoComExpressoes.split("\\s+");
+        List<String> lista = List.of(palavras);
+        String traducaoParcial = traduzirParalelo(lista);
+
+        // CAMADA 3: Ajustar concordância de gênero
+        String traducaoFinal = posProcessador.processar(traducaoParcial);
+
+        return traducaoFinal;
+    }
+
+    /**
+     * Traduz texto usando a nova implementação melhorada (3 camadas).
+     * Mantém assinatura original para compatibilidade.
+     *
+     * @param texto Texto a ser traduzido
+     * @return Texto traduzido
+     */
     public String traduzirTexto(String texto) {
+        return traduzirTextoMelhorado(texto);
+    }
+
+    /**
+     * Traduz texto usando apenas palavra-por-palavra (sem melhorias).
+     * Útil para comparação de performance.
+     *
+     * @param texto Texto a ser traduzido
+     * @return Texto traduzido (método antigo)
+     */
+    public String traduzirTextoSimples(String texto) {
         if (texto == null || texto.isBlank()) {
             return "";
         }
