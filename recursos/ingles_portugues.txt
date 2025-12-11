@@ -2182,8 +2182,8 @@ every;cada
 indeed;realmente
 his;seu
 them;eles
-their;seu (plural)
-its;seu (neutro)
+their;seu
+its;seu
 each;cada
 male;masculino
 female;feminino
