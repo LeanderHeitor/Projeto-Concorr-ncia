@@ -1,14 +1,17 @@
 package br.com.concorrencia.tradutor;
 
+import br.com.concorrencia.tradutor.controller.gui.TradutorConcorrencia;
 import br.com.concorrencia.tradutor.task.EngineConcorrencia;
+import javafx.application.Application;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) {
+
+        Application.launch(TradutorConcorrencia.class, args);
 
         try {
             System.out.println("=".repeat(50));

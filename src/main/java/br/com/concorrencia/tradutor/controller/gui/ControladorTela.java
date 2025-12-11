@@ -1,35 +1,39 @@
 package br.com.concorrencia.tradutor.controller.gui;
 
 import br.com.concorrencia.tradutor.task.EngineConcorrencia;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ControladorTela {
 
+    @FXML private BorderPane rootPane;
     @FXML private Label lblStatusMotor;
     @FXML private Label lblArquivoInfo;
-    @FXML private Label lblThreadsConfig;
     @FXML private TextArea txtEntrada;
     @FXML private TextArea txtSaida;
-    @FXML private ListView<String> listMonitorThreads;
+    @FXML private TilePane panelThreads;
     @FXML private ProgressBar progressoTraducao;
+    @FXML private Label lblProgresso;
     @FXML private Button btnTraduzir;
     @FXML private Button btnCarregarArquivo;
     @FXML private Button btnInicializar;
@@ -37,68 +41,67 @@ public class ControladorTela {
     @FXML private Label lblTempoSerial;
     @FXML private Label lblTempoParalelo;
     @FXML private Label lblGanho;
-    @FXML private Label lblThreadsAtivas;
 
     private EngineConcorrencia engine;
     private Timeline monitorTimeline;
 
+    private final Map<Long, ThreadCard> threadCards = new HashMap<>();
+
     @FXML
     public void initialize() {
-        listMonitorThreads.setItems(FXCollections.observableArrayList());
-
-        SpinnerValueFactory<Integer> valueFactory =
-            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 32, 4);
+        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 64, 4);
         spinnerThreads.setValueFactory(valueFactory);
 
         btnTraduzir.setDisable(true);
         btnCarregarArquivo.setDisable(true);
 
-        iniciarMonitoramento();
+        iniciarMonitoramentoVisual();
     }
 
     @FXML
     protected void onInicializarClick() {
         int numThreads = spinnerThreads.getValue();
 
-        lblStatusMotor.setText("Inicializando Pools e Carregando Corpus...");
-        lblStatusMotor.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
-        btnInicializar.setDisable(true);
-        btnTraduzir.setDisable(true);
-        btnCarregarArquivo.setDisable(true);
+        // Feedback visual imediato
+        lblStatusMotor.setText("CARREGANDO...");
+        lblStatusMotor.setStyle("-fx-text-fill: #f39c12;");
 
-        if (engine != null) {
-            engine.encerrar();
-        }
+        if (engine != null) engine.encerrar();
+        panelThreads.getChildren().clear();
+        threadCards.clear();
 
-        this.engine = new EngineConcorrencia(numThreads);
+        Task<Void> initTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                engine = new EngineConcorrencia(numThreads);
+                engine.inicializar(() -> {});
+                Thread.sleep(500);
+                return null;
+            }
+        };
 
-        engine.inicializar(() -> {
-            Platform.runLater(() -> {
-                lblStatusMotor.setText("Motor Concorrente Pronto");
-                lblStatusMotor.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
-                lblThreadsConfig.setText("[" + numThreads + " threads]");
-                btnInicializar.setText("Reinicializar");
-                btnInicializar.setDisable(false);
-                btnTraduzir.setDisable(false);
-                btnCarregarArquivo.setDisable(false);
-            });
+        initTask.setOnSucceeded(e -> {
+            lblStatusMotor.setText("ONLINE (" + numThreads + " Threads)");
+            lblStatusMotor.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+            btnInicializar.setText("Reiniciar Engine");
+            btnTraduzir.setDisable(false);
+            btnCarregarArquivo.setDisable(false);
         });
+
+        new Thread(initTask).start();
     }
 
     @FXML
     protected void onCarregarArquivoClick() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Selecione o arquivo de texto");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Arquivos de Texto", "*.txt"));
-
-        Stage stage = (Stage) btnCarregarArquivo.getScene().getWindow();
-        File arquivo = fileChooser.showOpenDialog(stage);
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texto", "*.txt"));
+        File arquivo = fileChooser.showOpenDialog(rootPane.getScene().getWindow());
 
         if (arquivo != null) {
             try {
                 String conteudo = Files.readString(arquivo.toPath());
                 txtEntrada.setText(conteudo);
-                lblArquivoInfo.setText("Arquivo: " + arquivo.getName() + " (" + conteudo.length() + " chars)");
+                lblArquivoInfo.setText(arquivo.getName() + " (" + (conteudo.length()/1024) + " KB)");
             } catch (Exception e) {
                 lblArquivoInfo.setText("Erro ao ler arquivo");
             }
@@ -108,32 +111,27 @@ public class ControladorTela {
     @FXML
     protected void onTraduzirClick() {
         String texto = txtEntrada.getText();
-        if (texto.isEmpty()) return;
+        if (texto.isEmpty() || engine == null) return;
 
-        if (engine == null) {
-            txtSaida.setText("ERRO: Engine não inicializado. Clique em 'Inicializar Engine' primeiro.");
-            return;
-        }
-
-        txtSaida.clear();
-        progressoTraducao.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
-        btnTraduzir.setDisable(true);
-        btnCarregarArquivo.setDisable(true);
-        btnInicializar.setDisable(true);
-        lblTempoSerial.setText("-");
-        lblTempoParalelo.setText("-");
-        lblGanho.setText("-");
+        resetarUI();
 
         List<String> palavras = Arrays.asList(texto.split("\\s+"));
 
         Task<String> tarefaTraducao = new Task<>() {
             @Override
             protected String call() throws Exception {
+                updateMessage("Processando " + palavras.size() + " palavras...");
                 return engine.gerarRelatorioDesempenho(palavras);
             }
         };
 
+        Timeline particleTimeline = criarAnimacaoParticulas();
+        particleTimeline.play();
+
         tarefaTraducao.setOnSucceeded(e -> {
+            particleTimeline.stop();
+            limparParticulas();
+
             String relatorioBruto = tarefaTraducao.getValue();
             parseAndUpdateStats(relatorioBruto);
 
@@ -141,19 +139,132 @@ public class ControladorTela {
             txtSaida.setText(traducaoFinal);
 
             progressoTraducao.setProgress(1.0);
-            btnTraduzir.setDisable(false);
-            btnCarregarArquivo.setDisable(false);
-            btnInicializar.setDisable(false);
+            lblProgresso.setText("Concluído!");
+            habilitarBotoes(true);
         });
 
         tarefaTraducao.setOnFailed(e -> {
-            txtSaida.setText("Erro Crítico na Thread de Tradução: " + tarefaTraducao.getException().getMessage());
-            btnTraduzir.setDisable(false);
-            btnCarregarArquivo.setDisable(false);
-            btnInicializar.setDisable(false);
+            particleTimeline.stop();
+            txtSaida.setText("Erro: " + tarefaTraducao.getException().getMessage());
+            habilitarBotoes(true);
         });
 
         new Thread(tarefaTraducao).start();
+    }
+
+    private void iniciarMonitoramentoVisual() {
+        monitorTimeline = new Timeline(new KeyFrame(Duration.millis(100), event -> {
+            Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+
+            List<Thread> workers = allThreads.keySet().stream()
+                    .filter(t -> t.getName().contains("pool") || t.getName().contains("Worker") || t.getName().contains("ForkJoin"))
+                    .sorted(Comparator.comparing(Thread::getName))
+                    .collect(Collectors.toList());
+
+            // 3. Atualiza ou Cria Cards
+            for (Thread t : workers) {
+                if (!threadCards.containsKey(t.getId())) {
+                    ThreadCard card = new ThreadCard(t.getName());
+                    threadCards.put(t.getId(), card);
+                    panelThreads.getChildren().add(card);
+                }
+                threadCards.get(t.getId()).atualizarEstado(t.getState());
+            }
+
+            List<Long> idsAtivos = workers.stream().map(Thread::getId).toList();
+            List<Long> idsParaRemover = new ArrayList<>();
+            for(Long id : threadCards.keySet()) {
+                if(!idsAtivos.contains(id)) idsParaRemover.add(id);
+            }
+            idsParaRemover.forEach(id -> {
+                panelThreads.getChildren().remove(threadCards.get(id));
+                threadCards.remove(id);
+            });
+
+        }));
+        monitorTimeline.setCycleCount(Timeline.INDEFINITE);
+        monitorTimeline.play();
+    }
+
+    private static class ThreadCard extends VBox {
+        private final Label lblName;
+        private final Label lblState;
+        private final Rectangle statusIndicator;
+
+        public ThreadCard(String threadName) {
+            this.setPrefSize(140, 80);
+            this.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #ecf0f1; -fx-border-radius: 8; -fx-padding: 10;");
+            this.setEffect(new DropShadow(5, Color.rgb(0,0,0,0.1)));
+            this.setAlignment(Pos.CENTER_LEFT);
+            this.setSpacing(5);
+
+            lblName = new Label(threadName);
+            lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 10;");
+
+            HBox statusBox = new HBox(5);
+            statusBox.setAlignment(Pos.CENTER_LEFT);
+
+            statusIndicator = new Rectangle(10, 10);
+            statusIndicator.setArcWidth(10);
+            statusIndicator.setArcHeight(10);
+
+            lblState = new Label("INIT");
+            lblState.setStyle("-fx-font-size: 9;");
+
+            statusBox.getChildren().addAll(statusIndicator, lblState);
+            this.getChildren().addAll(lblName, statusBox);
+        }
+
+        public void atualizarEstado(Thread.State state) {
+            lblState.setText(state.toString());
+
+            Color cor;
+            boolean animar = false;
+
+            switch (state) {
+                case RUNNABLE:
+                    cor = Color.web("#2ecc71"); //verde
+                    animar = true;
+                    break;
+                case WAITING:
+                case TIMED_WAITING:
+                    cor = Color.web("#f1c40f"); //amarelo
+                    break;
+                case BLOCKED:
+                    cor = Color.web("#e74c3c"); //vermelho
+                    break;
+                default:
+                    cor = Color.GRAY;
+            }
+
+            statusIndicator.setFill(cor);
+
+            if (animar) {
+                this.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 8; -fx-border-color: #2ecc71; -fx-border-width: 2;");
+                if (this.getEffect() instanceof DropShadow) {
+                    Glow glow = new Glow(0.8);
+                    this.setEffect(glow);
+                }
+            } else {
+                this.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #bdc3c7; -fx-border-width: 1;");
+                this.setEffect(new DropShadow(5, Color.rgb(0,0,0,0.1)));
+            }
+        }
+    }
+
+    private void resetarUI() {
+        txtSaida.clear();
+        lblTempoSerial.setText("-");
+        lblTempoParalelo.setText("-");
+        lblGanho.setText("-");
+        progressoTraducao.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+        habilitarBotoes(false);
+    }
+
+    private void habilitarBotoes(boolean enable) {
+        btnTraduzir.setDisable(!enable);
+        btnCarregarArquivo.setDisable(!enable);
+        btnInicializar.setDisable(!enable);
     }
 
     private void parseAndUpdateStats(String relatorio) {
@@ -164,36 +275,57 @@ public class ControladorTela {
                 if (linha.contains("Paralelo:")) lblTempoParalelo.setText(linha.split(":")[1].trim());
                 if (linha.contains("Ganho")) lblGanho.setText(linha.split(":")[1].trim());
             }
-        } catch (Exception e) {
-            lblTempoSerial.setText("Erro stats");
-        }
+        } catch (Exception ignore) {}
     }
 
-    private void iniciarMonitoramento() {
-        monitorTimeline = new Timeline(new KeyFrame(Duration.millis(100), event -> {
-            Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+    private final List<Node> activeParticles = new ArrayList<>();
 
-            List<String> threadsRelevantes = allThreads.keySet().stream()
-                    .filter(t -> t.getName().toLowerCase().contains("pool") ||
-                            t.getName().toLowerCase().contains("worker") ||
-                            t.getName().toLowerCase().contains("executor"))
-                    .map(t -> String.format("%s | %s", t.getName(), t.getState()))
-                    .sorted()
-                    .collect(Collectors.toList());
+    private Timeline criarAnimacaoParticulas() {
+        Timeline tl = new Timeline(new KeyFrame(Duration.millis(150), e -> {
+            if (threadCards.isEmpty()) return;
 
-            listMonitorThreads.setItems(FXCollections.observableArrayList(threadsRelevantes));
-            lblThreadsAtivas.setText(String.valueOf(threadsRelevantes.size()));
+            List<ThreadCard> activeCards = threadCards.values().stream()
+                    .filter(c -> c.lblState.getText().equals("RUNNABLE"))
+                    .toList();
+
+            if (activeCards.isEmpty()) activeCards = new ArrayList<>(threadCards.values());
+            if (activeCards.isEmpty()) return;
+
+            ThreadCard target = activeCards.get(new Random().nextInt(activeCards.size()));
+
+            Circle particle = new Circle(4, Color.web("#3498db"));
+            rootPane.getChildren().add(particle);
+            activeParticles.add(particle);
+
+            double startX = txtEntrada.localToScene(txtEntrada.getWidth()/2, txtEntrada.getHeight()/2).getX();
+            double startY = txtEntrada.localToScene(txtEntrada.getWidth()/2, txtEntrada.getHeight()/2).getY();
+
+            double targetX = target.localToScene(target.getWidth()/2, target.getHeight()/2).getX();
+            double targetY = target.localToScene(target.getWidth()/2, target.getHeight()/2).getY();
+
+            particle.setTranslateX(startX);
+            particle.setTranslateY(startY);
+
+            TranslateTransition tt = new TranslateTransition(Duration.millis(600), particle);
+            tt.setToX(targetX);
+            tt.setToY(targetY);
+            tt.setOnFinished(evt -> {
+                rootPane.getChildren().remove(particle);
+                activeParticles.remove(particle);
+            });
+            tt.play();
         }));
-        monitorTimeline.setCycleCount(Timeline.INDEFINITE);
-        monitorTimeline.play();
+        tl.setCycleCount(Timeline.INDEFINITE);
+        return tl;
+    }
+
+    private void limparParticulas() {
+        rootPane.getChildren().removeAll(activeParticles);
+        activeParticles.clear();
     }
 
     public void stop() {
-        if (monitorTimeline != null) {
-            monitorTimeline.stop();
-        }
-        if (engine != null) {
-            engine.encerrar();
-        }
+        if(engine != null) engine.encerrar();
+        if(monitorTimeline != null) monitorTimeline.stop();
     }
 }

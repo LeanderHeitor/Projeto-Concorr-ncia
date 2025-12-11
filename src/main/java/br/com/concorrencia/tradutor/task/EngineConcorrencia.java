@@ -106,13 +106,15 @@ public class EngineConcorrencia {
 
                 // Carrega apenas dicionarios EN->PT (excluindo outros arquivos)
                 File[] arquivos = pasta.listFiles((dir, nome) ->
-                    nome.endsWith(".txt") &&
-                    !nome.equals("expressoes.txt") &&
-                    !nome.equals("generos.txt") &&
-                    !nome.equals("portugues_ingles.txt") &&
-                    !nome.equals("livro_entrada.txt") &&
-                    !nome.equals("dicionario.txt") &&
-                    !nome.contains("traduzido"));
+                        nome.endsWith(".txt") &&
+                                !nome.equals("expressoes.txt") &&
+                                !nome.equals("generos.txt") &&
+                                !nome.equals("portugues_ingles.txt") &&
+                                !nome.equals("livro_entrada.txt") &&
+                                !nome.equals("dicionario.txt") &&
+                                !nome.contains("traduzido") &&
+                                !nome.contains("biblia") &&
+                                !nome.contains("backup"));
 
                 if (arquivos != null) {
                     for (File arq : arquivos) {
