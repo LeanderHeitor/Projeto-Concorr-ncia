@@ -20,14 +20,24 @@ public class EngineConcorrencia {
     private final ProcessadorExpressoes processadorExpressoes;
     private final PosProcessador posProcessador;
     private CyclicBarrier barreiraInicializacao;
+    private final int numThreadsTraducao;
 
     public EngineConcorrencia() {
+        this(4);
+    }
+
+    public EngineConcorrencia(int numThreadsTraducao) {
+        this.numThreadsTraducao = numThreadsTraducao;
         this.dicionario = new Dicionario();
         this.processadorExpressoes = new ProcessadorExpressoes();
         this.posProcessador = new PosProcessador();
         this.poolLeitura = Executors.newFixedThreadPool(2);
         this.poolAnalise = Executors.newFixedThreadPool(2);
-        this.poolTraducao = Executors.newCachedThreadPool();
+        this.poolTraducao = Executors.newFixedThreadPool(numThreadsTraducao);
+    }
+
+    public int getNumThreadsTraducao() {
+        return numThreadsTraducao;
     }
 
     public void inicializar(Runnable onConcluido) {
@@ -76,12 +86,15 @@ public class EngineConcorrencia {
                     System.err.println("Aviso: generos.txt não encontrado - tradução sem ajuste de concordância");
                 }
 
-                // Carrega apenas dicionários EN->PT (excluindo PT->EN, expressoes e generos)
+                // Carrega apenas dicionarios EN->PT (excluindo outros arquivos)
                 File[] arquivos = pasta.listFiles((dir, nome) ->
                     nome.endsWith(".txt") &&
                     !nome.equals("expressoes.txt") &&
                     !nome.equals("generos.txt") &&
-                    !nome.equals("portugues_ingles.txt"));
+                    !nome.equals("portugues_ingles.txt") &&
+                    !nome.equals("livro_entrada.txt") &&
+                    !nome.equals("dicionario.txt") &&
+                    !nome.contains("traduzido"));
 
                 if (arquivos != null) {
                     for (File arq : arquivos) {
@@ -158,9 +171,9 @@ public class EngineConcorrencia {
     /**
      * Traduz texto usando sistema de 3 camadas para melhor qualidade.
      *
-     * CAMADA 1: Processamento de expressões multi-palavra
-     * CAMADA 2: Tradução palavra-por-palavra (paralela)
-     * CAMADA 3: Pós-processamento linguístico (concordância)
+     * CAMADA 1: Processamento de expressoes multi-palavra
+     * CAMADA 2: Traducao palavra-por-palavra (paralela)
+     * CAMADA 3: Pos-processamento linguistico (concordancia)
      *
      * @param texto Texto a ser traduzido
      * @return Texto traduzido com melhor qualidade
@@ -170,7 +183,7 @@ public class EngineConcorrencia {
             return "";
         }
 
-        // CAMADA 1: Substituir expressões multi-palavra
+        // CAMADA 1: Substituir expressoes multi-palavra
         String textoComExpressoes = processadorExpressoes.processar(texto);
 
         // CAMADA 2: Traduzir palavras restantes (paralelo)
@@ -178,7 +191,7 @@ public class EngineConcorrencia {
         List<String> lista = List.of(palavras);
         String traducaoParcial = traduzirParalelo(lista);
 
-        // CAMADA 3: Ajustar concordância de gênero
+        // CAMADA 3: Ajustar concordancia de genero
         String traducaoFinal = posProcessador.processar(traducaoParcial);
 
         return traducaoFinal;

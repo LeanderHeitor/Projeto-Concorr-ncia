@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
@@ -22,10 +23,21 @@
                 </font>
             </Label>
             <HBox alignment="CENTER" spacing="15.0">
+                <Label text="Threads de Tradução:" textFill="#bdc3c7" >
+                    <font><Font size="14.0"/></font>
+                </Label>
+                <Spinner fx:id="spinnerThreads" editable="true" prefWidth="80.0" />
+                <Button fx:id="btnInicializar" text="Inicializar Engine" onAction="#onInicializarClick"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox alignment="CENTER" spacing="15.0">
                 <Label text="Status Engine:" textFill="#bdc3c7" >
                     <font><Font size="14.0"/></font>
                 </Label>
-                <Label fx:id="lblStatusMotor" text="Aguardando..." textFill="#f1c40f">
+                <Label fx:id="lblStatusMotor" text="Aguardando configuração..." textFill="#f39c12">
+                    <font><Font name="System Bold" size="14.0"/></font>
+                </Label>
+                <Label fx:id="lblThreadsConfig" text="" textFill="#3498db">
                     <font><Font name="System Bold" size="14.0"/></font>
                 </Label>
             </HBox>

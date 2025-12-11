@@ -15,6 +15,9 @@ public class TradutorTask implements Callable<String> {
 
     @Override
     public String call() {
+        // Log para mostrar qual thread está trabalhando
+        System.out.println("[" + Thread.currentThread().getName() + "] traduzindo: " + palavra);
+
         String limpa = palavra.toLowerCase().replaceAll("[^a-zA-Zá-úÁ-Ú0-9]", "");
         String traducao = dicionario.traduzir(limpa);
 

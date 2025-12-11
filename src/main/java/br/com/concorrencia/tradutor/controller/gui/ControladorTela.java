@@ -25,12 +25,15 @@ public class ControladorTela {
 
     @FXML private Label lblStatusMotor;
     @FXML private Label lblArquivoInfo;
+    @FXML private Label lblThreadsConfig;
     @FXML private TextArea txtEntrada;
     @FXML private TextArea txtSaida;
     @FXML private ListView<String> listMonitorThreads;
     @FXML private ProgressBar progressoTraducao;
     @FXML private Button btnTraduzir;
     @FXML private Button btnCarregarArquivo;
+    @FXML private Button btnInicializar;
+    @FXML private Spinner<Integer> spinnerThreads;
     @FXML private Label lblTempoSerial;
     @FXML private Label lblTempoParalelo;
     @FXML private Label lblGanho;
@@ -41,23 +44,45 @@ public class ControladorTela {
 
     @FXML
     public void initialize() {
-        this.engine = new EngineConcorrencia();
         listMonitorThreads.setItems(FXCollections.observableArrayList());
 
-        lblStatusMotor.setText("Inicializando Pools e Carregando Corpus...");
+        SpinnerValueFactory<Integer> valueFactory =
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 32, 4);
+        spinnerThreads.setValueFactory(valueFactory);
+
         btnTraduzir.setDisable(true);
         btnCarregarArquivo.setDisable(true);
+
+        iniciarMonitoramento();
+    }
+
+    @FXML
+    protected void onInicializarClick() {
+        int numThreads = spinnerThreads.getValue();
+
+        if (engine != null) {
+            engine.encerrar();
+        }
+
+        lblStatusMotor.setText("Inicializando Pools e Carregando Corpus...");
+        lblStatusMotor.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
+        btnInicializar.setDisable(true);
+        btnTraduzir.setDisable(true);
+        btnCarregarArquivo.setDisable(true);
+
+        this.engine = new EngineConcorrencia(numThreads);
 
         engine.inicializar(() -> {
             Platform.runLater(() -> {
                 lblStatusMotor.setText("Motor Concorrente Pronto");
                 lblStatusMotor.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+                lblThreadsConfig.setText("[" + numThreads + " threads]");
+                btnInicializar.setText("Reinicializar");
+                btnInicializar.setDisable(false);
                 btnTraduzir.setDisable(false);
                 btnCarregarArquivo.setDisable(false);
             });
         });
-
-        iniciarMonitoramento();
     }
 
     @FXML
@@ -85,10 +110,16 @@ public class ControladorTela {
         String texto = txtEntrada.getText();
         if (texto.isEmpty()) return;
 
+        if (engine == null) {
+            txtSaida.setText("ERRO: Engine não inicializado. Clique em 'Inicializar Engine' primeiro.");
+            return;
+        }
+
         txtSaida.clear();
         progressoTraducao.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
         btnTraduzir.setDisable(true);
         btnCarregarArquivo.setDisable(true);
+        btnInicializar.setDisable(true);
         lblTempoSerial.setText("-");
         lblTempoParalelo.setText("-");
         lblGanho.setText("-");
@@ -112,12 +143,14 @@ public class ControladorTela {
             progressoTraducao.setProgress(1.0);
             btnTraduzir.setDisable(false);
             btnCarregarArquivo.setDisable(false);
+            btnInicializar.setDisable(false);
         });
 
         tarefaTraducao.setOnFailed(e -> {
             txtSaida.setText("Erro Crítico na Thread de Tradução: " + tarefaTraducao.getException().getMessage());
             btnTraduzir.setDisable(false);
             btnCarregarArquivo.setDisable(false);
+            btnInicializar.setDisable(false);
         });
 
         new Thread(tarefaTraducao).start();

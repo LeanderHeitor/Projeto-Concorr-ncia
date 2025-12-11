@@ -77,3 +77,20 @@ do it;faça isso
 give up;desistir
 work hard;trabalhar duro
 never give up;nunca desistir
+
+in the beginning;no princípio
+the heavens;os céus
+the earth;a terra
+the deep;o abismo
+the waters;as águas
+the face of the waters;a superfície das águas
+let there be;haja
+and there was;e houve
+evening and morning;tarde e manhã
+the sky;o céu
+winged birds;pássaros alados
+living creatures;criaturas vivas
+each kind;cada espécie
+be fruitful and multiply;sejam frutíferos e multipliquem-se
+breath of life;fôlego de vida
+green plant;planta verde
