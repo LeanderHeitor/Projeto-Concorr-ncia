@@ -41,7 +41,15 @@ public class EngineConcorrencia {
     }
 
     public void inicializar(Runnable onConcluido) {
-        this.barreiraInicializacao = new CyclicBarrier(2, onConcluido);
+        this.barreiraInicializacao = new CyclicBarrier(2, () -> {
+            // Encerra pools de inicialização após uso
+            poolLeitura.shutdown();
+            poolAnalise.shutdown();
+            // Executa callback do usuário
+            if (onConcluido != null) {
+                onConcluido.run();
+            }
+        });
 
         poolLeitura.submit(() -> {
             try {
@@ -173,13 +181,10 @@ public class EngineConcorrencia {
     }
 
     public void encerrar() {
-        poolLeitura.shutdown();
-        poolAnalise.shutdown();
+        // poolLeitura e poolAnalise já foram encerrados após inicialização
         poolTraducao.shutdown();
 
         try {
-            poolLeitura.awaitTermination(10, TimeUnit.SECONDS);
-            poolAnalise.awaitTermination(10, TimeUnit.SECONDS);
             poolTraducao.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
