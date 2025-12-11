@@ -46,18 +46,28 @@ public class EngineConcorrencia {
         poolLeitura.submit(() -> {
             try {
                 carregarDicionarios();
-                barreiraInicializacao.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
-                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar dicionários: " + e.getMessage());
+            } finally {
+                try {
+                    barreiraInicializacao.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         });
 
         poolAnalise.submit(() -> {
             try {
                 carregarDicionarios();
-                barreiraInicializacao.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
-                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar dicionários: " + e.getMessage());
+            } finally {
+                try {
+                    barreiraInicializacao.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         });
     }
@@ -166,6 +176,14 @@ public class EngineConcorrencia {
         poolLeitura.shutdown();
         poolAnalise.shutdown();
         poolTraducao.shutdown();
+
+        try {
+            poolLeitura.awaitTermination(10, TimeUnit.SECONDS);
+            poolAnalise.awaitTermination(10, TimeUnit.SECONDS);
+            poolTraducao.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**

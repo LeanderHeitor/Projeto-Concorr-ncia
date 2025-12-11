@@ -60,15 +60,15 @@ public class ControladorTela {
     protected void onInicializarClick() {
         int numThreads = spinnerThreads.getValue();
 
-        if (engine != null) {
-            engine.encerrar();
-        }
-
         lblStatusMotor.setText("Inicializando Pools e Carregando Corpus...");
         lblStatusMotor.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
         btnInicializar.setDisable(true);
         btnTraduzir.setDisable(true);
         btnCarregarArquivo.setDisable(true);
+
+        if (engine != null) {
+            engine.encerrar();
+        }
 
         this.engine = new EngineConcorrencia(numThreads);
 
@@ -186,5 +186,14 @@ public class ControladorTela {
         }));
         monitorTimeline.setCycleCount(Timeline.INDEFINITE);
         monitorTimeline.play();
+    }
+
+    public void stop() {
+        if (monitorTimeline != null) {
+            monitorTimeline.stop();
+        }
+        if (engine != null) {
+            engine.encerrar();
+        }
     }
 }

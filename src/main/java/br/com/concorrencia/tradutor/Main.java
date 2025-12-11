@@ -4,6 +4,8 @@ import br.com.concorrencia.tradutor.task.EngineConcorrencia;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) {
