@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 
 public class TradutorConcorrencia extends Application {
@@ -14,13 +13,12 @@ public class TradutorConcorrencia extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/br/com/concorrencia/tradutor/tela.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1024, 700);
+        Scene scene = new Scene(fxmlLoader.load(), 1280, 768);
 
         controller = fxmlLoader.getController();
 
-        stage.setTitle("Tradutor - Concorrência (Engine System)");
+        stage.setTitle("Tradutor - Concorrência");
         stage.setScene(scene);
-        stage.setResizable(false);
         stage.show();
     }
 

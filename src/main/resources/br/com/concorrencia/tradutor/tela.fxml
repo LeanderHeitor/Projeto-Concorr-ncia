@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -18,7 +17,7 @@
 
     <top>
         <VBox alignment="CENTER" spacing="10.0" style="-fx-background-color: #2c3e50; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 0);">
-            <Label text="VISUALIZADOR DE TRADUÇÃO CONCORRENTE" textFill="WHITE">
+            <Label text="TRADUTOR CONCORRENTE - SPEEDUP REAL" textFill="WHITE">
                 <font>
                     <Font name="System Bold" size="22.0" />
                 </font>
@@ -29,7 +28,7 @@
                     <Spinner fx:id="spinnerThreads" editable="true" prefWidth="80.0" style="-fx-font-weight: bold;"/>
                 </HBox>
 
-                <Button fx:id="btnInicializar" onAction="#onInicializarClick" text="⚡ INICIALIZAR MOTOR"
+                <Button fx:id="btnInicializar" onAction="#onInicializarClick" text="⚡ INICIALIZAR ENGINE"
                         style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
 
                 <Label fx:id="lblStatusMotor" text="OFFLINE" textFill="#7f8c8d" style="-fx-font-weight: bold;"/>
@@ -63,7 +62,7 @@
                 </Label>
 
                 <HBox spacing="15" alignment="CENTER_LEFT">
-                    <Label text="Status:" style="-fx-font-weight: bold;"/>
+                    <Label text="Legenda:" style="-fx-font-weight: bold;"/>
                     <Label text="● RUNNABLE" textFill="#27ae60" style="-fx-font-size: 10;"/>
                     <Label text="● WAITING" textFill="#f1c40f" style="-fx-font-size: 10;"/>
                     <Label text="● BLOCKED" textFill="#c0392b" style="-fx-font-size: 10;"/>
@@ -76,10 +75,13 @@
                 </ScrollPane>
 
                 <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 10; -fx-border-radius: 5; -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);">
-                    <Label text="Resultados do Benchmark" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                    <HBox spacing="10"><Label text="Serial:" textFill="#7f8c8d"/><Label fx:id="lblTempoSerial" text="-" textFill="#c0392b" style="-fx-font-weight: bold;"/></HBox>
-                    <HBox spacing="10"><Label text="Paralelo:" textFill="#7f8c8d"/><Label fx:id="lblTempoParalelo" text="-" textFill="#27ae60" style="-fx-font-weight: bold;"/></HBox>
-                    <HBox spacing="10"><Label text="Speedup:" textFill="#7f8c8d"/><Label fx:id="lblGanho" text="-" textFill="#2980b9" style="-fx-font-weight: bold;"/></HBox>
+                    <Label text="Métricas de Desempenho" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <HBox spacing="10"><Label text="Tempo Serial:" textFill="#7f8c8d"/><Label fx:id="lblTempoSerial" text="-" textFill="#c0392b" style="-fx-font-weight: bold;"/></HBox>
+                    <HBox spacing="10"><Label text="Tempo Paralelo:" textFill="#7f8c8d"/><Label fx:id="lblTempoParalelo" text="-" textFill="#27ae60" style="-fx-font-weight: bold;"/></HBox>
+                    <HBox spacing="10" style="-fx-padding: 5 0 0 0; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;">
+                        <Label text="SPEEDUP:" textFill="#2980b9" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="lblSpeedup" text="-" textFill="#2980b9" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+                    </HBox>
                 </VBox>
             </VBox>
         </SplitPane>
@@ -90,7 +92,7 @@
             <Label fx:id="lblProgresso" text="Aguardando início..." textFill="WHITE" style="-fx-font-size: 10;"/>
             <ProgressBar fx:id="progressoTraducao" prefWidth="Infinity" progress="0.0" style="-fx-accent: #2ecc71;"/>
             <HBox alignment="CENTER" style="-fx-padding: 10 0 0 0;">
-                <Button fx:id="btnTraduzir" text="▶ INICIAR TRADUÇÃO CONCORRENTE" onAction="#onTraduzirClick" disable="true"
+                <Button fx:id="btnTraduzir" text="TRADUZIR" onAction="#onTraduzirClick" disable="true"
                         style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-padding: 10 30; -fx-cursor: hand; -fx-background-radius: 5;"/>
             </HBox>
         </VBox>

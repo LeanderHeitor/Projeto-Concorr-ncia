@@ -15,17 +15,14 @@ public class TradutorTask implements Callable<String> {
 
     @Override
     public String call() {
-        // Log para mostrar qual thread está trabalhando
-        System.out.println("[" + Thread.currentThread().getName() + "] traduzindo: " + palavra);
+        System.out.println("[" + Thread.currentThread().getName() + "] Traduzindo: " + palavra);
+        String limpa = palavra.replaceAll("[^a-zA-Z0-9á-úÁ-ÚçÇ]", "");
+        String traduzida = dicionario.traduzir(limpa);
 
-        String limpa = palavra.toLowerCase().replaceAll("[^a-zA-Zá-úÁ-Ú0-9]", "");
-        String traducao = dicionario.traduzir(limpa);
-
-        // Se não encontrou, mantém a palavra original
-        if (traducao == null) {
-            return palavra;
+        if (!palavra.equals(limpa)) {
+            return traduzida + " ";
         }
 
-        return traducao;
+        return traduzida;
     }
 }
