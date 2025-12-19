@@ -1,6 +1,8 @@
 package br.com.concorrencia.tradutor.task;
 
 import br.com.concorrencia.tradutor.model.Dicionario;
+import br.com.concorrencia.tradutor.util.PosProcessador;
+import br.com.concorrencia.tradutor.util.ProcessadorExpressoes;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,11 +14,23 @@ public class EngineConcorrencia {
     private ExecutorService poolTraducao;
     private final Dicionario dicionario;
     private int numThreads;
+    private final PosProcessador posProcessador;
+    private final ProcessadorExpressoes processadorExpressoes;
 
     public EngineConcorrencia(int numThreads) {
         this.numThreads = numThreads;
         this.dicionario = new Dicionario();
         this.poolTraducao = Executors.newFixedThreadPool(numThreads);
+        this.posProcessador = new PosProcessador();
+        this.processadorExpressoes = new ProcessadorExpressoes();
+    }
+
+    public String aplicarExpressoes(String texto) {
+        return processadorExpressoes.processar(texto);
+    }
+
+    public String aplicarGramatica(String texto) {
+        return posProcessador.processar(texto);
     }
 
     public void inicializar(Runnable onConcluido) {
@@ -35,12 +49,19 @@ public class EngineConcorrencia {
             File[] arquivos = pasta.listFiles((dir, name) -> name.endsWith(".txt"));
             if (arquivos != null) {
                 for (File f : arquivos) {
+                    if (f.getName().contains("generos") || f.getName().contains("expressoes")) continue;
                     try {
                         System.out.println("Carregando dicionário: " + f.getName());
                         dicionario.carregarArquivo(f);
                     } catch (Exception e) {
                         System.err.println("Erro ao ler " + f.getName() + ": " + e.getMessage());
                     }
+                }
+                try {
+                    processadorExpressoes.carregarArquivo("recursos/expressoes.txt");
+                    posProcessador.carregarArquivo("recursos/generos.txt");
+                } catch (Exception e) {
+                    System.err.println("Erro ao carregar utilitários: " + e.getMessage());
                 }
             }
         } else {

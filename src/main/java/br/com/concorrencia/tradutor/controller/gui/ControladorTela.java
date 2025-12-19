@@ -36,12 +36,10 @@ public class ControladorTela {
     @FXML private Button btnInicializar;
     @FXML private Spinner<Integer> spinnerThreads;
 
-    // Resultados
     @FXML private Label lblTempoSerial;
     @FXML private Label lblTempoParalelo;
-    @FXML private Label lblSpeedup; // Mudou nome de lblGanho para lblSpeedup no FXML? Se não, ajuste aqui.
-    // Se no FXML ainda estiver lblGanho, use:
-    @FXML private Label lblGanho; // Vou assumir que no FXML pode estar como lblGanho ou lblSpeedup
+    @FXML private Label lblSpeedup;
+    @FXML private Label lblGanho;
 
     private EngineConcorrencia engine;
     private Timeline monitorTimeline;
@@ -56,7 +54,6 @@ public class ControladorTela {
         btnTraduzir.setDisable(true);
         btnCarregarArquivo.setDisable(true);
 
-        // Garante que a barra de progresso comece zerada
         progressoTraducao.setProgress(0);
 
         iniciarMonitoramentoVisual();
@@ -74,7 +71,6 @@ public class ControladorTela {
 
         engine = new EngineConcorrencia(numThreads);
 
-        // Inicializa em thread separada para carregar arquivos
         engine.inicializar(() -> Platform.runLater(() -> {
             lblStatusMotor.setText("ONLINE (" + numThreads + " Threads)");
             lblStatusMotor.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
@@ -107,20 +103,24 @@ public class ControladorTela {
         if (texto.isEmpty() || engine == null) return;
 
         resetarUI();
-        List<String> palavras = Arrays.asList(texto.split("\\s+"));
 
         Task<String> tarefaTraducao = new Task<>() {
             @Override
             protected String call() throws Exception {
-                // 1. Gera Relatório (Roda Serial vs Paralelo para comparar)
+                updateMessage("Pré-processando expressões...");
+                String textoComExpressoes = engine.aplicarExpressoes(texto);
+
+                List<String> palavras = Arrays.asList(textoComExpressoes.split("\\s+"));
+
                 updateMessage("Calculando Speedup...");
                 String relatorio = engine.gerarRelatorioDesempenho(palavras);
 
-                // 2. Traduz de verdade para exibir
                 updateMessage("Finalizando tradução...");
-                String traducaoFinal = engine.traduzirParalelo(palavras);
+                String traducaoBruta = engine.traduzirParalelo(palavras);
 
-                // Gambiarra para passar dois resultados: concatenamos com um separador único
+                updateMessage("Ajustando gramática...");
+                String traducaoFinal = engine.aplicarGramatica(traducaoBruta);
+
                 return relatorio + "###SEP###" + traducaoFinal;
             }
         };
@@ -156,7 +156,6 @@ public class ControladorTela {
     }
 
     private void parseAndUpdateStats(String relatorio) {
-        // Se no FXML o ID for lblGanho, mapeamos aqui para facilitar
         Label targetSpeedup = (lblSpeedup != null) ? lblSpeedup : lblGanho;
 
         String[] linhas = relatorio.split("\n");
@@ -181,22 +180,17 @@ public class ControladorTela {
         btnInicializar.setDisable(!enable);
     }
 
-    // --- Monitoramento Visual das Threads ---
-
     private void iniciarMonitoramentoVisual() {
         monitorTimeline = new Timeline(new KeyFrame(Duration.millis(200), event -> {
-            // Filtra threads criadas pelo nosso pool
             List<Thread> workers = Thread.getAllStackTraces().keySet().stream()
                     .filter(t -> t.getName().contains("pool") || t.getName().contains("thread"))
                     .filter(t -> t.getThreadGroup() != null && !t.getThreadGroup().getName().equals("system"))
                     .sorted(Comparator.comparing(Thread::getName))
                     .collect(Collectors.toList());
 
-            // Só mostra se tivermos inicializado a engine e tiver threads de pool ativas
             if (engine == null) return;
 
             for (Thread t : workers) {
-                // Filtro para pegar apenas as threads do ExecutorService (geralmente pool-X-thread-Y)
                 if (!t.getName().contains("pool-")) continue;
 
                 if (!threadCards.containsKey(t.getId())) {
@@ -207,10 +201,8 @@ public class ControladorTela {
                 threadCards.get(t.getId()).atualizarEstado(t.getState());
             }
 
-            // Cleanup
             threadCards.keySet().removeIf(id -> workers.stream().noneMatch(t -> t.getId() == id));
             panelThreads.getChildren().removeIf(node -> {
-                // Remove visualmente se a thread morreu (simplificado)
                 return false;
             });
         }));
@@ -223,7 +215,6 @@ public class ControladorTela {
         if(monitorTimeline != null) monitorTimeline.stop();
     }
 
-    // --- Componente UI Interno (Card) ---
     private static class ThreadCard extends VBox {
         private final Label lblState;
         private final Rectangle statusIndicator;
@@ -253,7 +244,6 @@ public class ControladorTela {
     }
 
     private Timeline criarAnimacaoParticulas() {
-        // Retorna timeline vazia para não quebrar se não quiser animação complexa agora
         return new Timeline();
     }
 
